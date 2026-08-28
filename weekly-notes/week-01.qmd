@@ -35,9 +35,9 @@ sessionInfo()$R.version$version.string
 
 <!-- CHANGE THIS: 3-4 sentences -->
 
-What I want out of this course:
+What I want out of this course: I want to better understand modeling and data sets. I think the projects, like tracking house prices, sound exciting and topical. Hopefully I leave this course with a more intuitive approach to large data sets. 
 
-One thing I'm nervous about:
+One thing I'm nervous about: Even though I have experience working with GIS, it's not fresh in my brain. I'm a little nervous coming into this class with minimal computer science knowledge. 
 
 ## Questions I Still Have
 
