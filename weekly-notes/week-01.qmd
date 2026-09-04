@@ -41,5 +41,5 @@ One thing I'm nervous about: Even though I have experience working with GIS, it'
 
 ## Questions I Still Have
 
--
--
+- Rendering...does it always have to happen via the index tab?
+- How does the library function work?
