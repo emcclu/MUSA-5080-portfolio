@@ -6,8 +6,9 @@ title: "About Me"
 
 <!-- CHANGE THIS -->
 
-Write a few paragraphs about yourself here: where you came from before MUSA,
-what drew you to urban spatial analytics, and what you're hoping to do with it.
+While I am not technically in the MUSA program, I am still in the Design school. My background is in history, and I'm interested in how it intersects with policy and planning. I am especially interested in planning for coastal resilience.
+
+I have taken a couple of GIS classes in the past, none of which focused heavily on R. I am excited to be in this class this semester. It is a welcome break from my more theoretical/historical coursework. 
 
 ## Skills
 
