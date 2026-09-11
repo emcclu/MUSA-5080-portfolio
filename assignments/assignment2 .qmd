@@ -1,0 +1,176 @@
+---
+title: "Assignment 2: Who Do We Know the Least About?"
+subtitle: "Measuring uncertainty in American Community Survey data"
+author: "Ellis McClure"
+date: today
+format:
+  html:
+    toc: true
+    code-fold: false
+execute:
+  warning: false
+  message: false
+---
+
+
+
+## Setup
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+```
+
+---
+
+## The question
+
+Every number the American Community Survey publishes is an estimate drawn from a
+sample, not a count. That means every number comes with a margin of error — a
+statement about how wrong it might be.
+
+Most people ignore it. In this assignment, I won't.
+
+
+**In this analysis, I look at total commuters across counties in Rhode Island, and
+ask which communities we measure most and least reliably. I think the state's small geographic size and proximity to Boston provides an interesting layer to commuter patterns.**
+
+---
+
+## Choosing what to measure
+
+```{r}
+my_state <- "RI"        # two-letter abbreviation, in quotes
+my_variable <- "B08303_001"     # the variable code, in quotes
+```
+
+## Pulling the data
+
+```{r}
+county_data <- get_acs(
+  geography = "county",
+  variables = my_variable,
+  state = my_state,
+  year = 2023,
+  survey = "acs5"
+)
+```
+
+Let's look at what came back.
+
+```{r}
+dim(county_data)
+head(county_data)
+```
+
+
+
+**There are five counties in the state of Rhode Island, which matches the row count. **
+
+---
+
+## How big is the margin of error?
+
+A margin of error of 3,000 means something very different for an estimate of 20,000
+than for an estimate of 200,000. To compare across places, we need it as a
+percentage.
+
+```{r}
+county_data <- county_data %>%
+  mutate(moe_pct = moe/estimate * 100)
+```
+
+
+
+Now sort to see which counties are measured least reliably.
+
+```{r}
+county_data %>%
+  arrange(desc(moe_pct)) %>%
+  select(NAME, estimate, moe, moe_pct) %>%
+  head(10)
+```
+
+
+
+**Bristol County has the largest margin of error relative to its estimate. Its margin of error percentage is 3.185%.**
+
+---
+
+## Sorting counties into reliability categories
+
+```{r}
+county_data <- county_data %>%
+  mutate(reliability = case_when(
+    moe_pct < 2  ~ "High confidence",
+    moe_pct < 3 ~ "Moderate",
+    TRUE         ~ "Low confidence"
+  ))
+
+count(county_data, reliability)
+```
+
+
+
+**1 county falls into high confidence, 1 falls into low confidence, and the remaining 3 fall into moderate confidence. I changed the cutoffs from 5 and 10 percent to 2 and 3, to better display the split between such a small number of counties.**
+
+---
+
+## Is the margin of error bigger in small places?
+
+To answer this we need population and our variable side by side, in the same row.
+That means a **wide** pull.
+
+```{r}
+county_wide <- get_acs(
+  geography = "county",
+  variables = c(myvar = my_variable,
+                pop   = "B01003_001"),
+  state = my_state,
+  year = 2023,
+  survey = "acs5",
+  output = "wide"
+)
+
+head(county_wide)
+```
+
+
+
+```{r}
+county_wide <- county_wide %>%
+  mutate(moe_pct = myvarM / myvarE * 100) %>%
+  mutate(reliability = case_when(
+    moe_pct < 2  ~ "High confidence",
+    moe_pct < 3 ~ "Moderate",
+    TRUE         ~ "Low confidence"
+  ))
+```
+
+Now compare the average population of counties in each reliability category.
+
+```{r}
+county_wide %>%
+  group_by(reliability) %>%
+  summarize(
+    n_counties = n(),
+    avg_population = mean(popE)
+  )
+```
+
+
+
+
+
+**The average population of the single high confidence county is 658,977. The lowest confidence county has the lowest average population, at 50,568. Confidence increases alongside an increase in average population.**
+
+---
+
+## What this means for policy
+
+
+
+**We know the most about commuter population from counties with higher populations, like Providence County. We know the least about Bristol County, which is roughly thirteen times smaller in population than Providence County. This makes sense, as smaller places in population have a smaller sample size, and thus a larger margin of error. A smaller population means less data points, and a result, a higher sense of uncertainty. If a state agency allocated funding based on my commuter variable, the areas with less confidence would likely be hurt, since there are uncertainties: what if they allocate an insufficient amount of dollars for a project, based on too low of an estimate of commuters? The moderate confidence level contains three out of the five of the state’s counties. These contain a range of populations, and we could only be so “certain” about them. But Providence County with a 1.45% margin of error, which contains the state’s capital, has the highest reliability: we could be confident in funding a roadworks project, based on an estimate of how many commuters’ lives it may improve. On the flip side, counties with lower reliability might even miss out on funding or projects, if the state agency is less certain of a quantifiable benefit.**
+
+
+---

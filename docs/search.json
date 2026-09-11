@@ -81,7 +81,7 @@
     "href": "assignments/index.html",
     "title": "Assignments",
     "section": "",
-    "text": "Completed assignments for MUSA 5080. New assignments appear here automatically once you add the .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\nNo matching items"
+    "text": "Completed assignments for MUSA 5080. New assignments appear here automatically once you add the .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nAssignment 2: Who Do We Know the Least About?\n\n\n\n\n\n\n\n\nSep 10, 2026\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "index.html",
@@ -159,5 +159,68 @@
     "title": "Week 2: dplyr and Census",
     "section": "Questions I Still Have",
     "text": "Questions I Still Have\n\nRendering…does it always have to happen via the index tab?\nHow does the library function work?"
+  },
+  {
+    "objectID": "assignments/assignment2 .html",
+    "href": "assignments/assignment2 .html",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "",
+    "text": "library(tidyverse)\nlibrary(tidycensus)"
+  },
+  {
+    "objectID": "assignments/assignment2 .html#setup",
+    "href": "assignments/assignment2 .html#setup",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "",
+    "text": "library(tidyverse)\nlibrary(tidycensus)"
+  },
+  {
+    "objectID": "assignments/assignment2 .html#the-question",
+    "href": "assignments/assignment2 .html#the-question",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "The question",
+    "text": "The question\nEvery number the American Community Survey publishes is an estimate drawn from a sample, not a count. That means every number comes with a margin of error — a statement about how wrong it might be.\nMost people ignore it. In this assignment, I won’t.\nIn this analysis, I look at total commuters across counties in Rhode Island, and ask which communities we measure most and least reliably. I think the state’s small geographic size and proximity to Boston provides an interesting layer to commuter patterns."
+  },
+  {
+    "objectID": "assignments/assignment2 .html#choosing-what-to-measure",
+    "href": "assignments/assignment2 .html#choosing-what-to-measure",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Choosing what to measure",
+    "text": "Choosing what to measure\n\nmy_state &lt;- \"RI\"        # two-letter abbreviation, in quotes\nmy_variable &lt;- \"B08303_001\"     # the variable code, in quotes"
+  },
+  {
+    "objectID": "assignments/assignment2 .html#pulling-the-data",
+    "href": "assignments/assignment2 .html#pulling-the-data",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Pulling the data",
+    "text": "Pulling the data\n\ncounty_data &lt;- get_acs(\n  geography = \"county\",\n  variables = my_variable,\n  state = my_state,\n  year = 2023,\n  survey = \"acs5\"\n)\n\nLet’s look at what came back.\n\ndim(county_data)\n\n[1] 5 5\n\nhead(county_data)\n\n# A tibble: 5 × 5\n  GEOID NAME                            variable   estimate   moe\n  &lt;chr&gt; &lt;chr&gt;                           &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt;\n1 44001 Bristol County, Rhode Island    B08303_001    22071   703\n2 44003 Kent County, Rhode Island       B08303_001    79144  1590\n3 44005 Newport County, Rhode Island    B08303_001    37266   948\n4 44007 Providence County, Rhode Island B08303_001   285849  4075\n5 44009 Washington County, Rhode Island B08303_001    57178  1424\n\n\nThere are five counties in the state of Rhode Island, which matches the row count."
+  },
+  {
+    "objectID": "assignments/assignment2 .html#how-big-is-the-margin-of-error",
+    "href": "assignments/assignment2 .html#how-big-is-the-margin-of-error",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "How big is the margin of error?",
+    "text": "How big is the margin of error?\nA margin of error of 3,000 means something very different for an estimate of 20,000 than for an estimate of 200,000. To compare across places, we need it as a percentage.\n\ncounty_data &lt;- county_data %&gt;%\n  mutate(moe_pct = moe/estimate * 100)\n\nNow sort to see which counties are measured least reliably.\n\ncounty_data %&gt;%\n  arrange(desc(moe_pct)) %&gt;%\n  select(NAME, estimate, moe, moe_pct) %&gt;%\n  head(10)\n\n# A tibble: 5 × 4\n  NAME                            estimate   moe moe_pct\n  &lt;chr&gt;                              &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;\n1 Bristol County, Rhode Island       22071   703    3.19\n2 Newport County, Rhode Island       37266   948    2.54\n3 Washington County, Rhode Island    57178  1424    2.49\n4 Kent County, Rhode Island          79144  1590    2.01\n5 Providence County, Rhode Island   285849  4075    1.43\n\n\nBristol County has the largest margin of error relative to its estimate. Its margin of error percentage is 3.185%."
+  },
+  {
+    "objectID": "assignments/assignment2 .html#sorting-counties-into-reliability-categories",
+    "href": "assignments/assignment2 .html#sorting-counties-into-reliability-categories",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Sorting counties into reliability categories",
+    "text": "Sorting counties into reliability categories\n\ncounty_data &lt;- county_data %&gt;%\n  mutate(reliability = case_when(\n    moe_pct &lt; 2  ~ \"High confidence\",\n    moe_pct &lt; 3 ~ \"Moderate\",\n    TRUE         ~ \"Low confidence\"\n  ))\n\ncount(county_data, reliability)\n\n# A tibble: 3 × 2\n  reliability         n\n  &lt;chr&gt;           &lt;int&gt;\n1 High confidence     1\n2 Low confidence      1\n3 Moderate            3\n\n\n1 county falls into high confidence, 1 falls into low confidence, and the remaining 3 fall into moderate confidence. I changed the cutoffs from 5 and 10 percent to 2 and 3, to better display the split between such a small number of counties."
+  },
+  {
+    "objectID": "assignments/assignment2 .html#is-the-margin-of-error-bigger-in-small-places",
+    "href": "assignments/assignment2 .html#is-the-margin-of-error-bigger-in-small-places",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Is the margin of error bigger in small places?",
+    "text": "Is the margin of error bigger in small places?\nTo answer this we need population and our variable side by side, in the same row. That means a wide pull.\n\ncounty_wide &lt;- get_acs(\n  geography = \"county\",\n  variables = c(myvar = my_variable,\n                pop   = \"B01003_001\"),\n  state = my_state,\n  year = 2023,\n  survey = \"acs5\",\n  output = \"wide\"\n)\n\nhead(county_wide)\n\n# A tibble: 5 × 6\n  GEOID NAME                            myvarE myvarM   popE  popM\n  &lt;chr&gt; &lt;chr&gt;                            &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;\n1 44001 Bristol County, Rhode Island     22071    703  50568    NA\n2 44003 Kent County, Rhode Island        79144   1590 170658    NA\n3 44005 Newport County, Rhode Island     37266    948  85095    NA\n4 44007 Providence County, Rhode Island 285849   4075 658977    NA\n5 44009 Washington County, Rhode Island  57178   1424 130073    NA\n\n\n\ncounty_wide &lt;- county_wide %&gt;%\n  mutate(moe_pct = myvarM / myvarE * 100) %&gt;%\n  mutate(reliability = case_when(\n    moe_pct &lt; 2  ~ \"High confidence\",\n    moe_pct &lt; 3 ~ \"Moderate\",\n    TRUE         ~ \"Low confidence\"\n  ))\n\nNow compare the average population of counties in each reliability category.\n\ncounty_wide %&gt;%\n  group_by(reliability) %&gt;%\n  summarize(\n    n_counties = n(),\n    avg_population = mean(popE)\n  )\n\n# A tibble: 3 × 3\n  reliability     n_counties avg_population\n  &lt;chr&gt;                &lt;int&gt;          &lt;dbl&gt;\n1 High confidence          1        658977 \n2 Low confidence           1         50568 \n3 Moderate                 3        128609.\n\n\nThe average population of the single high confidence county is 658,977. The lowest confidence county has the lowest average population, at 50,568. Confidence increases alongside an increase in average population."
+  },
+  {
+    "objectID": "assignments/assignment2 .html#what-this-means-for-policy",
+    "href": "assignments/assignment2 .html#what-this-means-for-policy",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "What this means for policy",
+    "text": "What this means for policy\nWe know the most about commuter population from counties with higher populations, like Providence County. We know the least about Bristol County, which is roughly thirteen times smaller in population than Providence County. This makes sense, as smaller places in population have a smaller sample size, and thus a larger margin of error. A smaller population means less data points, and a result, a higher sense of uncertainty. If a state agency allocated funding based on my commuter variable, the areas with less confidence would likely be hurt, since there are uncertainties: what if they allocate an insufficient amount of dollars for a project, based on too low of an estimate of commuters? The moderate confidence level contains three out of the five of the state’s counties. These contain a range of populations, and we could only be so “certain” about them. But Providence County with a 1.45% margin of error, which contains the state’s capital, has the highest reliability: we could be confident in funding a roadworks project, based on an estimate of how many commuters’ lives it may improve. On the flip side, counties with lower reliability might even miss out on funding or projects, if the state agency is less certain of a quantifiable benefit."
   }
 ]
