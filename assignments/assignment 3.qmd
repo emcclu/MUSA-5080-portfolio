@@ -1,0 +1,133 @@
+---
+title: "Verify the Claim: [Inequality and Poverty in Philadelphia Neighborhoods]"
+author: "Ellis McClure"
+date: today
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-summary: "Show code"
+    embed-resources: true
+---
+## The Article
+
+The 2018 WHYY article "New Census figures on Philly neighborhoods show inequality, high numbers of whites living in poverty," assesses the results of the Census Bureau's American Community Survey Five-Year Estimate. 
+
+```{r}
+#| label: setup
+library(tidyverse)
+library(tidycensus)
+library(sf)
+
+```
+
+
+```{r}
+my_state <- "PA"
+my_variable <- "B07012_002"
+my_county <- "Philadelphia"
+
+```
+
+```{r}
+pov_data_second <- get_acs(
+  geography = "tract",
+  state = "PA",
+  county = "Philadelphia",
+  variables = "B07012_002",
+  year = 2013,
+  survey = "acs5"
+)
+```
+
+```{r}
+pov_data_first <- get_acs(
+  geography = "tract",
+  variables = "B07012_002",
+  state = "PA",
+  county = "Philadelphia",
+  year = 2010,
+  survey = "acs5"
+)
+```
+
+## Reconstruct
+I chose to examine the estimated population living below 100 percent of the poverty level. It is represented by the variable code B07012_002. I chose to use the acs 5 year survey, from 2010 and 2013, since both of these years are situated within the two different ranges of years. The WHYY article jumps around on what variable it is pointing to as evidence of a poverty increase. The two spans studied do not overlap. 
+
+## Test
+```{r}
+poverty_share <- get_acs(
+  geography = "tract",
+  variables = c(below_poverty = "B07012_002",
+                total         = "B07012_001"),
+  state     = "PA",
+  year      = 2013,
+  survey    = "acs5",
+  output    = "wide"
+) %>%
+  mutate(
+    share     = below_povertyE / totalE,
+    share_moe = moe_prop(below_povertyE, totalE,
+                         below_povertyM, totalM)
+  )
+```
+
+```{r}
+get_poverty <- function(yr) {
+  get_acs(
+    geography = "tract",
+    variables = "B07012_002",
+    state     = "PA",
+    year      = yr,
+    survey    = "acs5"
+  ) %>%
+    mutate(period = paste0(yr - 4, "-", yr))
+}
+```
+
+```{r}
+poverty_change <- bind_rows(
+  get_poverty(2010),
+  get_poverty(2017)
+)
+
+poverty_wide <- poverty_change %>%
+  select(GEOID, NAME, period, estimate, moe) %>%
+  pivot_wider(
+    names_from  = period,
+    values_from = c(estimate, moe)
+  )
+```
+
+# Compute change
+
+```{r}
+poverty_tested <- poverty_wide %>%
+  mutate(
+    change   = `estimate_2013-2017` - `estimate_2006-2010`,
+    se_1     = `moe_2006-2010` / 1.645,
+    se_2     = `moe_2013-2017` / 1.645,
+    se_diff  = sqrt(se_1^2 + se_2^2),
+    moe_diff = se_diff * 1.645,
+    z        = change / se_diff,
+    significant = abs(z) > 1.645
+  )
+
+poverty_tested %>%
+  count(significant)
+```
+# Nearly fifth of the tracts were found to have had statistically significant increases in poverty. 
+
+```{r}
+library(gt)
+```
+
+## Adjudicate
+The data supports the article's claim that poverty increased in certain areas of Philly between the two five year Census studies. Enough of the county's tracts posessessed statistically significant increases in poverty. 
+
+
+## Rewrite
+
+Between the two five year Census periods, many Philadelphia census tracts saw statistically significant increases in poverty rates. While I am unable to comment on median income changes from the variable I selected, the proportion of individuals living in poverty did see an increase in several tracts. 
+
+-----------

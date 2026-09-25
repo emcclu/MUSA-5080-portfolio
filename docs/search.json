@@ -81,7 +81,7 @@
     "href": "assignments/index.html",
     "title": "Assignments",
     "section": "",
-    "text": "Completed assignments for MUSA 5080. New assignments appear here automatically once you add the .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nAssignment 2: Who Do We Know the Least About?\n\n\n\n\n\n\n\n\nSep 10, 2026\n\n\n\n\n\nNo matching items"
+    "text": "Completed assignments for MUSA 5080. New assignments appear here automatically once you add the .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nVerify the Claim: [Inequality and Poverty in Philadelphia Neighborhoods]\n\n\n\n\n\n\n\n\nSep 25, 2026\n\n\n\n\n\n\n\nAssignment 2: Who Do We Know the Least About?\n\n\n\n\n\n\n\n\nSep 25, 2026\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "index.html",
@@ -222,5 +222,47 @@
     "title": "Assignment 2: Who Do We Know the Least About?",
     "section": "What this means for policy",
     "text": "What this means for policy\nWe know the most about commuter population from counties with higher populations, like Providence County. We know the least about Bristol County, which is roughly thirteen times smaller in population than Providence County. This makes sense, as smaller places in population have a smaller sample size, and thus a larger margin of error. A smaller population means less data points, and a result, a higher sense of uncertainty. If a state agency allocated funding based on my commuter variable, the areas with less confidence would likely be hurt, since there are uncertainties: what if they allocate an insufficient amount of dollars for a project, based on too low of an estimate of commuters? The moderate confidence level contains three out of the five of the state’s counties. These contain a range of populations, and we could only be so “certain” about them. But Providence County with a 1.45% margin of error, which contains the state’s capital, has the highest reliability: we could be confident in funding a roadworks project, based on an estimate of how many commuters’ lives it may improve. On the flip side, counties with lower reliability might even miss out on funding or projects, if the state agency is less certain of a quantifiable benefit."
+  },
+  {
+    "objectID": "assignments/assignment 3.html",
+    "href": "assignments/assignment 3.html",
+    "title": "Verify the Claim: [Inequality and Poverty in Philadelphia Neighborhoods]",
+    "section": "",
+    "text": "The 2018 WHYY article “New Census figures on Philly neighborhoods show inequality, high numbers of whites living in poverty,” assesses the results of the Census Bureau’s American Community Survey Five-Year Estimate.\n\n\nShow code\nlibrary(tidyverse)\nlibrary(tidycensus)\nlibrary(sf)\n\n\n\n\nShow code\nmy_state &lt;- \"PA\"\nmy_variable &lt;- \"B07012_002\"\nmy_county &lt;- \"Philadelphia\"\n\n\n\n\nShow code\npov_data_second &lt;- get_acs(\n  geography = \"tract\",\n  state = \"PA\",\n  county = \"Philadelphia\",\n  variables = \"B07012_002\",\n  year = 2013,\n  survey = \"acs5\"\n)\n\n\n\n\nShow code\npov_data_first &lt;- get_acs(\n  geography = \"tract\",\n  variables = \"B07012_002\",\n  state = \"PA\",\n  county = \"Philadelphia\",\n  year = 2010,\n  survey = \"acs5\"\n)"
+  },
+  {
+    "objectID": "assignments/assignment 3.html#the-article",
+    "href": "assignments/assignment 3.html#the-article",
+    "title": "Verify the Claim: [Inequality and Poverty in Philadelphia Neighborhoods]",
+    "section": "",
+    "text": "The 2018 WHYY article “New Census figures on Philly neighborhoods show inequality, high numbers of whites living in poverty,” assesses the results of the Census Bureau’s American Community Survey Five-Year Estimate.\n\n\nShow code\nlibrary(tidyverse)\nlibrary(tidycensus)\nlibrary(sf)\n\n\n\n\nShow code\nmy_state &lt;- \"PA\"\nmy_variable &lt;- \"B07012_002\"\nmy_county &lt;- \"Philadelphia\"\n\n\n\n\nShow code\npov_data_second &lt;- get_acs(\n  geography = \"tract\",\n  state = \"PA\",\n  county = \"Philadelphia\",\n  variables = \"B07012_002\",\n  year = 2013,\n  survey = \"acs5\"\n)\n\n\n\n\nShow code\npov_data_first &lt;- get_acs(\n  geography = \"tract\",\n  variables = \"B07012_002\",\n  state = \"PA\",\n  county = \"Philadelphia\",\n  year = 2010,\n  survey = \"acs5\"\n)"
+  },
+  {
+    "objectID": "assignments/assignment 3.html#reconstruct",
+    "href": "assignments/assignment 3.html#reconstruct",
+    "title": "Verify the Claim: [Inequality and Poverty in Philadelphia Neighborhoods]",
+    "section": "Reconstruct",
+    "text": "Reconstruct\nI chose to examine the estimated population living below 100 percent of the poverty level. It is represented by the variable code B07012_002. I chose to use the acs 5 year survey, from 2010 and 2013, since both of these years are situated within the two different ranges of years. The WHYY article jumps around on what variable it is pointing to as evidence of a poverty increase. The two spans studied do not overlap."
+  },
+  {
+    "objectID": "assignments/assignment 3.html#test",
+    "href": "assignments/assignment 3.html#test",
+    "title": "Verify the Claim: [Inequality and Poverty in Philadelphia Neighborhoods]",
+    "section": "Test",
+    "text": "Test\n\n\nShow code\npoverty_share &lt;- get_acs(\n  geography = \"tract\",\n  variables = c(below_poverty = \"B07012_002\",\n                total         = \"B07012_001\"),\n  state     = \"PA\",\n  year      = 2013,\n  survey    = \"acs5\",\n  output    = \"wide\"\n) %&gt;%\n  mutate(\n    share     = below_povertyE / totalE,\n    share_moe = moe_prop(below_povertyE, totalE,\n                         below_povertyM, totalM)\n  )\n\n\n\n\nShow code\nget_poverty &lt;- function(yr) {\n  get_acs(\n    geography = \"tract\",\n    variables = \"B07012_002\",\n    state     = \"PA\",\n    year      = yr,\n    survey    = \"acs5\"\n  ) %&gt;%\n    mutate(period = paste0(yr - 4, \"-\", yr))\n}\n\n\n\n\nShow code\npoverty_change &lt;- bind_rows(\n  get_poverty(2010),\n  get_poverty(2017)\n)\n\npoverty_wide &lt;- poverty_change %&gt;%\n  select(GEOID, NAME, period, estimate, moe) %&gt;%\n  pivot_wider(\n    names_from  = period,\n    values_from = c(estimate, moe)\n  )"
+  },
+  {
+    "objectID": "assignments/assignment 3.html#adjudicate",
+    "href": "assignments/assignment 3.html#adjudicate",
+    "title": "Verify the Claim: [Inequality and Poverty in Philadelphia Neighborhoods]",
+    "section": "Adjudicate",
+    "text": "Adjudicate\nThe data supports the article’s claim that poverty increased in certain areas of Philly between the two five year Census studies. Enough of the county’s tracts posessessed statistically significant increases in poverty."
+  },
+  {
+    "objectID": "assignments/assignment 3.html#rewrite",
+    "href": "assignments/assignment 3.html#rewrite",
+    "title": "Verify the Claim: [Inequality and Poverty in Philadelphia Neighborhoods]",
+    "section": "Rewrite",
+    "text": "Rewrite\nBetween the two five year Census periods, many Philadelphia census tracts saw statistically significant increases in poverty rates. While I am unable to comment on median income changes from the variable I selected, the proportion of individuals living in poverty did see an increase in several tracts."
   }
 ]
