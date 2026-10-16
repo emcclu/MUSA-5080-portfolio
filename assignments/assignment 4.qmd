@@ -357,7 +357,7 @@ Every feature below reuses a Week 4 tool. The worked examples use burglaries and
 
 How many burglaries fall in each tract?
 
-```{r}
+### ```{r}
 #| label: count
 tracts <- tracts %>%
   mutate(n_burglary = lengths(st_intersects(., burglary)))
@@ -371,7 +371,7 @@ A tract with no burglaries gets 0, not NA, so Rule 1 is safe.
 
 Raw counts mostly measure **tract size**. A big tract has more of everything. Normalize by area, by population, or by housing units, depending on what makes sense for the thing you're counting.
 
-```{r}
+### ```{r}
 #| label: density
 tracts <- tracts %>%
   mutate(
@@ -390,7 +390,7 @@ If a tract has 40 residents and 3 burglaries, its rate is 75 per 1,000, which is
 
 How far is each tract from its nearest Indego station? Use the Week 4 pattern: find the nearest feature, then measure to it **element by element**.
 
-```{r}
+### ```{r}
 #| label: nearest
 stations <- st_read("https://www.rideindego.com/stations/json/", quiet = TRUE) %>%
   st_transform(st_crs(tracts))
@@ -408,7 +408,7 @@ tracts <- tracts %>%
 
 Sometimes the "thing" is a single location, such as City Hall as a stand-in for the center of the regional economy.
 
-```{r}
+### ```{r}
 #| label: city-hall
 city_hall <- st_sfc(st_point(c(-75.1636, 39.9526)), crs = 4326) %>%
   st_transform(st_crs(tracts))
@@ -421,21 +421,6 @@ tracts <- tracts %>%
 
 Build **at least three spatial features** from your own layers, and use at least two types (count, density, nearest distance, distance to a place). After **each one**, fit a model, cross-validate it, and log it.
 
-```{r}
-#| label: my-spatial
-tracts <- tracts %>%
-  mutate(___ = ___)
-
-f2 <- y ~ ___
-
-model_log <- model_log %>%
-  add_row(model = "m2", added = "___",
-          cv_rmse = cv_rmse(f2, tracts),
-          notes = "___")
-
-# repeat for each feature
-model_log
-```
 
 **Answer:** Which spatial feature helped most? Did any feature you expected to help do nothing, or make CV RMSE worse? Why might that be?
 
@@ -458,7 +443,7 @@ Keep your outcome `y` untransformed in this assignment. If you model `log(y)`, y
 
 Many urban variables are skewed: a few tracts have huge values, and most have small ones. Income, density, and counts are typical. A log compresses the long tail, so a model can use the difference between 1 and 10 as well as the difference between 100 and 1,000.
 
-```{r}
+## ```{r}
 #| label: log-look
 ggplot(tracts, aes(x = burglary_per_sqmi)) + geom_histogram(bins = 30) + theme_minimal()
 ggplot(tracts, aes(x = log1p(burglary_per_sqmi))) + geom_histogram(bins = 30) + theme_minimal()
@@ -475,7 +460,7 @@ ggplot(tracts, aes(x = log1p(burglary_per_sqmi))) + geom_histogram(bins = 30) + 
 
 If your scatterplot bends (rising and then flattening, or falling and then rising), a squared term lets the line curve. Write it with `I()`, which tells R to do the arithmetic rather than read `^` as formula syntax.
 
-```{r}
+## ```{r}
 #| label: squared-example
 m_sq <- lm(y ~ dist_ch_mi + I(dist_ch_mi^2), data = tracts)
 summary(m_sq)
@@ -483,7 +468,7 @@ summary(m_sq)
 
 **Reading the coefficient:** you can't read either coefficient alone anymore. The effect of X depends on where you are along X. A positive linear term with a negative squared term means Y rises with X and then levels off or turns down. Plot the fitted curve to see it:
 
-```{r}
+## ```{r}
 #| label: squared-plot
 ggplot(tracts, aes(x = dist_ch_mi, y = y)) +
   geom_point(alpha = 0.4) +
@@ -495,7 +480,7 @@ ggplot(tracts, aes(x = dist_ch_mi, y = y)) +
 
 Sometimes a number works better as groups, either because the relationship isn't smooth or because the categories are meaningful. You can make categories from any variable with `case_when()` or `cut()`, and then make sure R treats them as a **factor**.
 
-```{r}
+## ```{r}
 #| label: categorical-example
 tracts <- tracts %>%
   mutate(
@@ -524,9 +509,8 @@ If a category has only a handful of tracts, its coefficient is unstable, and in 
 
 Try **at least one of each**: a log, a squared term, and a categorical variable. Choose which variables to transform based on your plots, not at random. Log each model.
 
-```{r}
+## ```{r}
 #| label: my-transforms
-f_log <- y ~ ___
 
 model_log <- model_log %>%
   add_row(model = "m_", added = "log of ___",
@@ -550,9 +534,8 @@ model_log
 
 Combine the features and transformations that earned their place, **judged by CV RMSE, not p-values.**
 
-```{r}
+## ```{r}
 #| label: final
-f_final <- y ~ ___
 
 m_final <- lm(f_final, data = tracts)
 summary(m_final)
@@ -567,7 +550,7 @@ model_log
 
 ### Where is the final model wrong?
 
-```{r}
+## ```{r}
 #| label: resid-map-2
 tracts <- tracts %>% mutate(resid_final = residuals(m_final))
 
@@ -584,7 +567,7 @@ Put your two residual maps side by side, or put them next to each other in the r
 
 ### Are the biggest misses in the least reliable tracts?
 
-```{r}
+## ```{r}
 #| label: fog
 ggplot(tracts, aes(x = y_cv, y = abs(resid_final))) +
   geom_point(alpha = 0.5) +
