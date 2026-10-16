@@ -2,7 +2,7 @@
 title: "Home"
 ---
 
-# Ellis McClure {#welcome}
+# Ellis M {#welcome}
 
 <!-- CHANGE THIS: replace with your own name above -->
 
